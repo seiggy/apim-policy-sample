@@ -1,0 +1,31 @@
+<policies>
+    <inbound>
+        <base />
+        <choose>
+            <when condition="@{
+                var jwt = (Jwt)context.Variables["valid-jwt"];
+                var permissions = jwt.Claims["permissions"];
+                return Array.Exists(permissions, element => element == "sendEmail");
+                var tenantId = jwt.Claims["tid"];
+                var userTenants = jwt.Claims["user_tenants"]?.Split(',');
+            }">
+                <azure-openai-emit-token-metric namespace="aiusage">
+                    <dimension name="Tenant" value="@(tenantId)" />
+                </azure-openai-emit-token-metric>
+                <azure-openai-token-limit counter-key="@(context.Product.Id)"
+                    tokens-per-minute="500" estimate-prompt-tokens="false" remaining-tokens-variable-name="remainingTokens">
+                </azure-openai-token-limit>
+            </when>
+            <otherwise />
+        </choose>
+    </inbound>
+    <backend>
+        <base />
+    </backend>
+    <outbound>
+        <base />
+    </outbound>
+    <on-error>
+        <base />
+    </on-error>
+</policies>
